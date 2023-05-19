@@ -18,7 +18,7 @@ namespace API.Contexts
         public DbSet<Education> Educations { get; set; }
         public DbSet<Role> Roles { get; set; }
         public DbSet<Room> Rooms { get; set; }
-        public DbSet<Account> Universities { get; set; }
+        public DbSet<University> Universities { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {

@@ -22,7 +22,7 @@ namespace API.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("API.Model.AccountRole", b =>
+            modelBuilder.Entity("API.Model.Account", b =>
                 {
                     b.Property<Guid>("Guid")
                         .HasColumnType("uniqueidentifier")
@@ -145,6 +145,9 @@ namespace API.Migrations
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("guid");
 
+                    b.Property<Guid?>("AccountGuid")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("datetime2")
                         .HasColumnName("created_date");
@@ -172,6 +175,8 @@ namespace API.Migrations
                         .HasColumnName("university_guid");
 
                     b.HasKey("Guid");
+
+                    b.HasIndex("AccountGuid");
 
                     b.HasIndex("UniversityGuid");
 
@@ -295,7 +300,7 @@ namespace API.Migrations
                     b.ToTable("tb_m_rooms");
                 });
 
-            modelBuilder.Entity("API.Model.AccountRole", b =>
+            modelBuilder.Entity("API.Model.University", b =>
                 {
                     b.Property<Guid>("Guid")
                         .ValueGeneratedOnAdd()
@@ -325,11 +330,11 @@ namespace API.Migrations
                     b.ToTable("tb_m_universities");
                 });
 
-            modelBuilder.Entity("API.Model.AccountRole", b =>
+            modelBuilder.Entity("API.Model.Account", b =>
                 {
                     b.HasOne("API.Model.Employee", "Employee")
-                        .WithOne("AccountRole")
-                        .HasForeignKey("API.Model.AccountRole", "Guid")
+                        .WithOne("Account")
+                        .HasForeignKey("API.Model.Account", "Guid")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -338,7 +343,7 @@ namespace API.Migrations
 
             modelBuilder.Entity("API.Model.AccountRole", b =>
                 {
-                    b.HasOne("API.Model.AccountRole", "AccountRole")
+                    b.HasOne("API.Model.Account", "Account")
                         .WithMany("AccountRoles")
                         .HasForeignKey("AccountGuid")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -350,7 +355,7 @@ namespace API.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("AccountRole");
+                    b.Navigation("Account");
 
                     b.Navigation("Role");
                 });
@@ -376,13 +381,17 @@ namespace API.Migrations
 
             modelBuilder.Entity("API.Model.Education", b =>
                 {
+                    b.HasOne("API.Model.Account", null)
+                        .WithMany("Educations")
+                        .HasForeignKey("AccountGuid");
+
                     b.HasOne("API.Model.Employee", "Employee")
                         .WithOne("Education")
                         .HasForeignKey("API.Model.Education", "Guid")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("API.Model.AccountRole", "AccountRole")
+                    b.HasOne("API.Model.University", "University")
                         .WithMany("Educations")
                         .HasForeignKey("UniversityGuid")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -390,23 +399,23 @@ namespace API.Migrations
 
                     b.Navigation("Employee");
 
-                    b.Navigation("AccountRole");
+                    b.Navigation("University");
                 });
 
-            modelBuilder.Entity("API.Model.AccountRole", b =>
+            modelBuilder.Entity("API.Model.Account", b =>
                 {
                     b.Navigation("AccountRoles");
+
+                    b.Navigation("Educations");
                 });
 
             modelBuilder.Entity("API.Model.Employee", b =>
                 {
-                    b.Navigation("AccountRole")
-                        .IsRequired();
+                    b.Navigation("Account");
 
                     b.Navigation("Bookings");
 
-                    b.Navigation("Education")
-                        .IsRequired();
+                    b.Navigation("Education");
                 });
 
             modelBuilder.Entity("API.Model.Role", b =>
@@ -419,7 +428,7 @@ namespace API.Migrations
                     b.Navigation("Bookings");
                 });
 
-            modelBuilder.Entity("API.Model.AccountRole", b =>
+            modelBuilder.Entity("API.Model.University", b =>
                 {
                     b.Navigation("Educations");
                 });
