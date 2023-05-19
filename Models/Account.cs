@@ -19,11 +19,11 @@ namespace API.Model
         DateTime ExpiredTime { get; set; }
 
         // Cardinality
-        public Employee Employee { get; set; }
+        public Employee? Employee { get; set; }
 
-        public ICollection<Education> Educations { get; set; }
+        public ICollection<Education>? Educations { get; set; }
 
-        public ICollection<AccountRole> AccountRoles { get; set; }
+        public ICollection<AccountRole>? AccountRoles { get; set; }
 
     }
 }

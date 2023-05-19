@@ -17,9 +17,9 @@ namespace API.Model
 
         // Cardinality
 
-        public Account University { get; set; }
+        public Account? University { get; set; }
 
-        public Employee Employee { get; set; }
+        public Employee? Employee { get; set; }
 
     }
 }

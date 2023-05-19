@@ -15,7 +15,7 @@ namespace API.Model
         [Column("capacity")]
         public int Capacity { get; set; }
 
-        public ICollection<Booking> Bookings { get; set; }
+        public ICollection<Booking>? Bookings { get; set; }
 
     }
 }
