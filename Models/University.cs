@@ -1,9 +1,19 @@
-﻿namespace API.Model
+﻿using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace API.Model
 {
+    [Table("tb_m_universities")]
     public class University : BaseEntity
     {
-        string Code { get; set; }
-        string Name { get; set; }
+        [Column("code", TypeName = "nvarchar(50)")]
+        public string Code { get; set; }
+
+        [Column("name", TypeName = "nvarchar(100)")]
+        public string Name { get; set; }
+
+        // Cardinality
+        public ICollection<Education> Educations { get; set; }
 
     }
 }
