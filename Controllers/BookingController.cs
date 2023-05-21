@@ -8,8 +8,8 @@ namespace API.Controllers
     [Route("api/[controller]")]
     public class BookingController : ControllerBase
     {
-        private readonly IBookingRepository _bookingRepository;
-        public BookingController(IBookingRepository bookingRepository)
+        private readonly IRepository<Booking> _bookingRepository;
+        public BookingController(IRepository<Booking> bookingRepository)
         {
             _bookingRepository = bookingRepository;
         }

@@ -2,12 +2,12 @@
 
 namespace API.Contracts
 {
-    public interface IAccountRoleRepository
+    public interface IAccountRoleRepository : IRepository<AccountRole>
     {
-        AccountRole Create(AccountRole accountrole);
+        /*AccountRole Create(AccountRole accountrole);
         bool Update(AccountRole accountrole);
         bool Delete(Guid guid);
         IEnumerable<AccountRole> GetAll();
-        AccountRole? GetByGuid(Guid guid);
+        AccountRole? GetByGuid(Guid guid);*/
     }
 }

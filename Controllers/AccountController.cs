@@ -8,8 +8,8 @@ namespace API.Controllers
     [Route("api/[controller]")]
     public class AccountController : ControllerBase
     {
-        private readonly IAccountRepository _accountRepository;
-        public AccountController(IAccountRepository accountRepository)
+        private readonly IRepository<Account> _accountRepository;
+        public AccountController(IRepository<Account> accountRepository)
         {
             _accountRepository = accountRepository;
         }

@@ -8,8 +8,8 @@ namespace API.Controllers
     [Route("api/[controller]")]
     public class EmployeeController : ControllerBase
     {
-        private readonly IEmployeeRepository _employeeRepository;
-        public EmployeeController(IEmployeeRepository employeeRepository)
+        private readonly IRepository<Employee> _employeeRepository;
+        public EmployeeController(IRepository<Employee> employeeRepository)
         {
             _employeeRepository = employeeRepository;
         }

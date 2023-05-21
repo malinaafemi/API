@@ -2,7 +2,7 @@
 
 namespace API.Contracts
 {
-    public interface IEducationRepository
+    public interface IEducationRepository : IRepository<Education>
     {
         Education Create(Education education);
         bool Update(Education education);
