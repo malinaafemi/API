@@ -7,25 +7,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Contracts\IAccountRepository.cs" />
-    <Compile Remove="Contracts\IAccountRoleRepository.cs" />
-    <Compile Remove="Contracts\IBookingRepository.cs" />
-    <Compile Remove="Contracts\IEducationRepository.cs" />
-    <Compile Remove="Contracts\IEmployeeRepository.cs" />
-    <Compile Remove="Contracts\IRoleRepository.cs" />
-    <Compile Remove="Contracts\IRoomRepository.cs" />
-    <Compile Remove="Contracts\IUniversityRepository.cs" />
-    <Compile Remove="Repositories\AccountRepository.cs" />
-    <Compile Remove="Repositories\AccountRoleRepository.cs" />
-    <Compile Remove="Repositories\BookingRepository.cs" />
-    <Compile Remove="Repositories\EducationRepository.cs" />
-    <Compile Remove="Repositories\EmployeeRepository.cs" />
-    <Compile Remove="Repositories\RoleRepository.cs" />
-    <Compile Remove="Repositories\RoomRepository.cs" />
-    <Compile Remove="Repositories\UniversityRepository.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="7.0.5" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="7.0.5" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="7.0.5">

@@ -4,10 +4,10 @@ using API.Model;
 
 namespace API.Repositories
 {
-    public class Repository<T> : IRepository<T> where T : class
+    public class GeneralRepository<T> : IGeneralRepository<T> where T : class
     {
-        private readonly BookingManagementDbContext _context;
-        public Repository(BookingManagementDbContext context)
+        protected readonly BookingManagementDbContext _context;
+        public GeneralRepository(BookingManagementDbContext context)
         {
             _context = context;
         }
@@ -16,6 +16,9 @@ namespace API.Repositories
         {
             try
             {
+                typeof(T).GetProperty("CreatedDate")!.SetValue(item, DateTime.Now);
+                typeof(T).GetProperty("ModifiedDate")!.SetValue(item, DateTime.Now);
+
                 _context.Set<T>().Add(item);
                 _context.SaveChanges();
                 return item;
@@ -30,6 +33,19 @@ namespace API.Repositories
         {
             try
             {
+                var guid = (Guid)typeof(T).GetProperty("Guid")!.GetValue(item)!;
+
+                var oldEntity = GetByGuid(guid);
+                if(oldEntity == null)
+                {
+                    return false;
+                }
+
+                var getCreatedDate = typeof(T).GetProperty("CreatedDate")!.GetValue(oldEntity)!;
+
+                typeof(T).GetProperty("CreatedDate")!.SetValue(item, getCreatedDate);
+                typeof(T).GetProperty("ModifiedDate")!.SetValue(item, DateTime.Now);
+
                 _context.Set<T>().Update(item);
                 _context.SaveChanges();
                 return true;
@@ -67,7 +83,9 @@ namespace API.Repositories
 
         public T? GetByGuid(Guid guid)
         {
-            return _context.Set<T>().Find(guid);
+            var item =  _context.Set<T>().Find(guid);
+            _context.ChangeTracker.Clear();
+            return item;
         }
     }
 }

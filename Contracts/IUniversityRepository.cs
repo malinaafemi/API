@@ -1,13 +1,8 @@
 ﻿using API.Model;
-using API.Model;
 
-namespace API.Contracts;
-
-public interface IUniversityRepository : IRepository<University>
+namespace API.Contracts
 {
-    /*University Create(University university);
-    bool Update(University university);
-    bool Delete(Guid guid);
-    IEnumerable<University> GetAll();
-    University? GetByGuid(Guid guid);*/
+    public interface IUniversityRepository : IGeneralRepository<University>
+    {
+    }
 }

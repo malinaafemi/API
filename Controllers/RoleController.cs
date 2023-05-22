@@ -1,5 +1,10 @@
 ﻿using API.Contracts;
 using API.Model;
+using API.Repositories;
+using API.Utility;
+using API.ViewModels.Educations;
+using API.ViewModels.Roles;
+using API.ViewModels.Universities;
 using Microsoft.AspNetCore.Mvc;
 
 namespace API.Controllers
@@ -8,10 +13,12 @@ namespace API.Controllers
     [Route("api/[controller]")]
     public class RoleController : ControllerBase
     {
-        private readonly IRepository<Role> _roleRepository;
-        public RoleController(IRepository<Role> roleRepository)
+        private readonly IRoleRepository _roleRepository;
+        private readonly IMapper<Role, RoleVM> _roleMapper;
+        public RoleController(IRoleRepository roleRepository, IMapper<Role, RoleVM> roleMapper)
         {
             _roleRepository = roleRepository;
+            _roleMapper = roleMapper;
         }
 
         [HttpGet]
@@ -23,7 +30,9 @@ namespace API.Controllers
                 return NotFound();
             }
 
-            return Ok(roles);
+            var data = roles.Select(_roleMapper.Map).ToList();
+
+            return Ok(data);
         }
 
         [HttpGet("{guid}")]
@@ -35,13 +44,17 @@ namespace API.Controllers
                 return NotFound();
             }
 
-            return Ok(role);
+            var data = _roleMapper.Map(role);
+
+            return Ok(data);
         }
 
         [HttpPost]
-        public IActionResult Create(Role role)
+        public IActionResult Create(RoleVM roleVM)
         {
-            var result = _roleRepository.Create(role);
+            var roleConverted = _roleMapper.Map(roleVM);
+
+            var result = _roleRepository.Create(roleConverted);
             if (result is null)
             {
                 return BadRequest();
@@ -51,9 +64,10 @@ namespace API.Controllers
         }
 
         [HttpPut]
-        public IActionResult Update(Role role)
+        public IActionResult Update(RoleVM roleVM)
         {
-            var isUpdated = _roleRepository.Update(role);
+            var roleConverted = _roleMapper.Map(roleVM);
+            var isUpdated = _roleRepository.Update(roleConverted);
             if (!isUpdated)
             {
                 return BadRequest();

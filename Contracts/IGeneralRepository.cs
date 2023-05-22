@@ -2,9 +2,9 @@
 
 namespace API.Contracts
 {
-    public interface IRepository<T>
+    public interface IGeneralRepository<T>
     {
-        T Create(T item);
+        T? Create(T item);
         bool Update(T item);
         bool Delete(Guid guid);
         IEnumerable<T> GetAll();

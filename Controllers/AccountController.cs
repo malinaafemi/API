@@ -1,5 +1,10 @@
 ﻿using API.Contracts;
 using API.Model;
+using API.Utility;
+using API.ViewModels.AccountRoles;
+using API.ViewModels.Accounts;
+using API.ViewModels.Educations;
+using API.ViewModels.Universities;
 using Microsoft.AspNetCore.Mvc;
 
 namespace API.Controllers
@@ -8,10 +13,12 @@ namespace API.Controllers
     [Route("api/[controller]")]
     public class AccountController : ControllerBase
     {
-        private readonly IRepository<Account> _accountRepository;
-        public AccountController(IRepository<Account> accountRepository)
+        private readonly IAccountRepository _accountRepository;
+        private readonly IMapper<Account, AccountVM> _accountMapper;
+        public AccountController(IAccountRepository accountRepository, IMapper<Account, AccountVM> accountMapper)
         {
             _accountRepository = accountRepository;
+            _accountMapper = accountMapper;
         }
 
         [HttpGet]
@@ -23,7 +30,9 @@ namespace API.Controllers
                 return NotFound();
             }
 
-            return Ok(accounts);
+            var data = accounts.Select(_accountMapper.Map).ToList();
+
+            return Ok(data);
         }
 
         [HttpGet("{guid}")]
@@ -35,13 +44,16 @@ namespace API.Controllers
                 return NotFound();
             }
 
-            return Ok(account);
+            var data = _accountMapper.Map(account);
+
+            return Ok(data);
         }
 
         [HttpPost]
-        public IActionResult Create(Account account)
+        public IActionResult Create(AccountVM accountVM)
         {
-            var result = _accountRepository.Create(account);
+            var accountConverted = _accountMapper.Map(accountVM);
+            var result = _accountRepository.Create(accountConverted);
             if (result is null)
             {
                 return BadRequest();
@@ -51,9 +63,10 @@ namespace API.Controllers
         }
 
         [HttpPut]
-        public IActionResult Update(Account account)
+        public IActionResult Update(AccountVM accountVM)
         {
-            var isUpdated = _accountRepository.Update(account);
+            var accountConverted = _accountMapper.Map(accountVM);
+            var isUpdated = _accountRepository.Update(accountConverted);
             if (!isUpdated)
             {
                 return BadRequest();

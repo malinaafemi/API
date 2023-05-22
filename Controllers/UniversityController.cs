@@ -1,5 +1,8 @@
 ﻿using API.Contracts;
 using API.Model;
+using API.Repositories;
+using API.ViewModels.Educations;
+using API.ViewModels.Universities;
 using Microsoft.AspNetCore.Mvc;
 
 namespace API.Controllers;
@@ -8,10 +11,45 @@ namespace API.Controllers;
 [Route("api/[controller]")]
 public class UniversityController : ControllerBase
 {
-    private readonly IRepository<University> _universityRepository;
-    public UniversityController(IRepository<University> universityRepository)
+    private readonly IUniversityRepository _universityRepository;
+    private readonly IEducationRepository _educationRepository;
+    private readonly IMapper<University, UniversityVM> _mapper;
+    private readonly IMapper<Education, EducationVM> _educationMapper;
+    public UniversityController(IUniversityRepository universityRepository, IEducationRepository educationRepository, IMapper<University, UniversityVM> mapper,IMapper<Education, EducationVM> educationMapper)
     {
         _universityRepository = universityRepository;
+        _educationRepository = educationRepository;
+        _mapper = mapper;
+        _educationMapper = educationMapper;
+    }
+
+    [HttpGet("WithEducation")]
+    public IActionResult GetAllWithEducation()
+    {
+        var universities = _universityRepository.GetAll();
+        if (!universities.Any())
+        {
+            return NotFound();
+        }
+
+        var results = new List<UniversityEducationVM>();
+        foreach (var university in universities)
+        {
+            var education = _educationRepository.GetByUniversityId(university.Guid);
+            //var educationMapped = education.Select(EducationVM.ToVM);
+            var educationMapped = education.Select(_educationMapper.Map);
+
+            var result = new UniversityEducationVM
+            {
+                Guid = university.Guid,
+                Code = university.Code,
+                Name = university.Name,
+                Educations = educationMapped
+            };
+
+            results.Add(result);
+        }
+        return Ok(results);
     }
 
     [HttpGet]
@@ -23,7 +61,9 @@ public class UniversityController : ControllerBase
             return NotFound();
         }
 
-        return Ok(universities);
+        var data = universities.Select(_mapper.Map).ToList();
+
+        return Ok(data);
     }
 
     [HttpGet("{guid}")]
@@ -35,13 +75,18 @@ public class UniversityController : ControllerBase
             return NotFound();
         }
 
-        return Ok(university);
+        var data = _mapper.Map(university);
+
+        return Ok(data);
     }
 
     [HttpPost]
-    public IActionResult Create(University university)
+    public IActionResult Create(UniversityVM universityVM)
     {
-        var result = _universityRepository.Create(university);
+        // var universityConverted = UniversityVM.ToModel(universityVM);
+        var universityConverted = _mapper.Map(universityVM);
+
+        var result = _universityRepository.Create(universityConverted);
         if (result is null)
         {
             return BadRequest();
@@ -51,9 +96,10 @@ public class UniversityController : ControllerBase
     }
 
     [HttpPut]
-    public IActionResult Update(University university)
+    public IActionResult Update(UniversityVM universityVM)
     {
-        var isUpdated = _universityRepository.Update(university);
+        var universityConverted = _mapper.Map(universityVM);
+        var isUpdated = _universityRepository.Update(universityConverted);
         if (!isUpdated)
         {
             return BadRequest();

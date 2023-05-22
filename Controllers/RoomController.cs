@@ -1,5 +1,9 @@
 ﻿using API.Contracts;
 using API.Model;
+using API.Utility;
+using API.ViewModels.Educations;
+using API.ViewModels.Rooms;
+using API.ViewModels.Universities;
 using Microsoft.AspNetCore.Mvc;
 
 namespace API.Controllers
@@ -8,10 +12,12 @@ namespace API.Controllers
     [Route("api/[controller]")]
     public class RoomController : ControllerBase
     {
-        private readonly IRepository<Room> _roomRepository;
-        public RoomController(IRepository<Room> roomRepository)
+        private readonly IRoomRepository _roomRepository;
+        private readonly IMapper<Room, RoomVM> _roomMapper;
+        public RoomController(IRoomRepository roomRepository, IMapper<Room, RoomVM> roomMapper)
         {
             _roomRepository = roomRepository;
+            _roomMapper = roomMapper;
         }
 
         [HttpGet]
@@ -23,7 +29,9 @@ namespace API.Controllers
                 return NotFound();
             }
 
-            return Ok(rooms);
+            var data = rooms.Select(_roomMapper.Map).ToList();
+
+            return Ok(data);
         }
 
         [HttpGet("{guid}")]
@@ -34,14 +42,16 @@ namespace API.Controllers
             {
                 return NotFound();
             }
-
-            return Ok(room);
+            var data = _roomMapper.Map(room);
+            return Ok(data);
         }
 
         [HttpPost]
-        public IActionResult Create(Room room)
+        public IActionResult Create(RoomVM roomVM)
         {
-            var result = _roomRepository.Create(room);
+            var roomConverted = _roomMapper.Map(roomVM);
+
+            var result = _roomRepository.Create(roomConverted);
             if (result is null)
             {
                 return BadRequest();
@@ -51,9 +61,10 @@ namespace API.Controllers
         }
 
         [HttpPut]
-        public IActionResult Update(Room room)
+        public IActionResult Update(RoomVM roomVM)
         {
-            var isUpdated = _roomRepository.Update(room);
+            var roomConverted = _roomMapper.Map(roomVM);
+            var isUpdated = _roomRepository.Update(roomConverted);
             if (!isUpdated)
             {
                 return BadRequest();

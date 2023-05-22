@@ -1,5 +1,9 @@
 ﻿using API.Contracts;
 using API.Model;
+using API.Utility;
+using API.ViewModels.Educations;
+using API.ViewModels.Employees;
+using API.ViewModels.Universities;
 using Microsoft.AspNetCore.Mvc;
 
 namespace API.Controllers
@@ -8,10 +12,12 @@ namespace API.Controllers
     [Route("api/[controller]")]
     public class EmployeeController : ControllerBase
     {
-        private readonly IRepository<Employee> _employeeRepository;
-        public EmployeeController(IRepository<Employee> employeeRepository)
+        private readonly IEmployeeRepository _employeeRepository;
+        private readonly IMapper<Employee, EmployeeVM> _employeeMapper;
+        public EmployeeController(IEmployeeRepository employeeRepository, IMapper<University, UniversityVM> mapper, IMapper<Employee, EmployeeVM> employeeMapper)
         {
             _employeeRepository = employeeRepository;
+            _employeeMapper = employeeMapper;
         }
 
         [HttpGet]
@@ -23,7 +29,9 @@ namespace API.Controllers
                 return NotFound();
             }
 
-            return Ok(employees);
+            var data = employees.Select(_employeeMapper.Map).ToList();
+
+            return Ok(data);
         }
 
         [HttpGet("{guid}")]
@@ -34,14 +42,16 @@ namespace API.Controllers
             {
                 return NotFound();
             }
+            var data = _employeeMapper.Map(employee);
 
-            return Ok(employee);
+            return Ok(data);
         }
 
         [HttpPost]
-        public IActionResult Create(Employee employee)
+        public IActionResult Create(EmployeeVM employeeVM)
         {
-            var result = _employeeRepository.Create(employee);
+            var employeeConverted = _employeeMapper.Map(employeeVM);
+            var result = _employeeRepository.Create(employeeConverted);
             if (result is null)
             {
                 return BadRequest();
@@ -51,9 +61,10 @@ namespace API.Controllers
         }
 
         [HttpPut]
-        public IActionResult Update(Employee employee)
+        public IActionResult Update(EmployeeVM employeeVM)
         {
-            var isUpdated = _employeeRepository.Update(employee);
+            var employeeConverted = _employeeMapper.Map(employeeVM);
+            var isUpdated = _employeeRepository.Update(employeeConverted);
             if (!isUpdated)
             {
                 return BadRequest();
