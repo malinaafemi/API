@@ -1,6 +1,7 @@
 ﻿using API.Contracts;
 using API.Model;
 using API.Utility;
+using API.ViewModels.Accounts;
 using API.ViewModels.Educations;
 using API.ViewModels.Employees;
 using API.ViewModels.Universities;
@@ -14,10 +15,19 @@ namespace API.Controllers
     {
         private readonly IEmployeeRepository _employeeRepository;
         private readonly IMapper<Employee, EmployeeVM> _employeeMapper;
-        public EmployeeController(IEmployeeRepository employeeRepository, IMapper<University, UniversityVM> mapper, IMapper<Employee, EmployeeVM> employeeMapper)
+        private readonly IMapper<Account, AccountVM> _accountMapper;
+        private readonly IMapper<Education, EducationVM> _educationMapper;
+        private readonly IMapper<University, UniversityVM> _universityMapper;
+        public EmployeeController(IEmployeeRepository employeeRepository, IAccountRepository accountRepository, IMapper<Employee, EmployeeVM> employeeMapper, 
+            IMapper<Education, EducationVM> educationMapper, IMapper<University, UniversityVM> universityMapper,
+            IMapper<Account, AccountVM> accountMapper)
         {
             _employeeRepository = employeeRepository;
             _employeeMapper = employeeMapper;
+            _educationMapper = educationMapper;
+            _universityMapper = universityMapper;
+            _accountMapper = accountMapper;
+
         }
 
         [HttpGet]
@@ -59,6 +69,38 @@ namespace API.Controllers
 
             return Ok(result);
         }
+
+        /*[HttpPost("Register")]
+
+        public IActionResult Register(RegisterVM registerVM)
+        {
+
+        }*/
+
+        /*[HttpPost("Register")]
+        public IActionResult Register(EmployeeVM employeeVM, AccountVM accountVM)
+        {
+
+            var employeeConverted = _employeeMapper.Map(employeeVM);
+            var result = _employeeRepository.Create(employeeConverted);
+            if (result is null)
+            {
+                return BadRequest();
+            }
+
+            return Ok(result);
+
+            var acountConverted = _accountMapper.Map(accountVM);
+            var result2 = _accountRepository.Create(acountConverted);
+            if (result2 is null)
+            {
+                return BadRequest();
+            }
+
+            return Ok(result2);
+
+
+        }*/
 
         [HttpPut]
         public IActionResult Update(EmployeeVM employeeVM)

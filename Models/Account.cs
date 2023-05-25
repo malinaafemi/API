@@ -10,11 +10,11 @@ namespace API.Model
         public string Password { get; set; }
 
         [Column("is_deleted")]
-        public bool IsDeleted { get; set; }
+        public bool? IsDeleted { get; set; }
         [Column("otp")]
-        public int OTP { get; set; }
+        public int? OTP { get; set; }
         [Column("is_used")]
-        public bool IsUsed { get; set; }
+        public bool? IsUsed { get; set; }
         [Column("expired_time")]
         DateTime ExpiredTime { get; set; }
 

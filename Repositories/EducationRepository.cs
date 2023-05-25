@@ -1,6 +1,7 @@
 ﻿using API.Contexts;
 using API.Contracts;
 using API.Model;
+using System;
 
 namespace API.Repositories
 {
@@ -11,6 +12,13 @@ namespace API.Repositories
         {
             return _context.Set<Education>().Where(e => e.UniversityGuid == universityId);
         }
+        
+        // coba
+        public Education GetByEmployeeId(Guid employeeId)
+        {
+            return _context.Set<Education>().Find(employeeId);
+        }
+
 
     }
 }

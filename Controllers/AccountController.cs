@@ -6,6 +6,7 @@ using API.ViewModels.Accounts;
 using API.ViewModels.Educations;
 using API.ViewModels.Universities;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Identity.Client;
 
 namespace API.Controllers
 {
@@ -47,6 +48,28 @@ namespace API.Controllers
             var data = _accountMapper.Map(account);
 
             return Ok(data);
+        }
+
+        [HttpPost("Register")]
+
+        public IActionResult Register(RegisterVM registerVM)
+        {
+            
+            var result = _accountRepository.Register(registerVM);
+            switch (result)
+            {
+                case 0:
+                    return BadRequest("Registration failed");
+                case 1:
+                    return BadRequest("Email already exists");
+                case 2:
+                    return BadRequest("Phone number already exists");
+                case 3:
+                    return Ok("Registration success");
+            }
+
+            return Ok();
+
         }
 
         [HttpPost]
