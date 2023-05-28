@@ -14,9 +14,9 @@ namespace API.Model
         [Column("otp")]
         public int? OTP { get; set; }
         [Column("is_used")]
-        public bool? IsUsed { get; set; }
+        public bool IsUsed { get; set; }
         [Column("expired_time")]
-        DateTime ExpiredTime { get; set; }
+        public DateTime ExpiredTime { get; set; }
 
         // Cardinality
         public Employee? Employee { get; set; }

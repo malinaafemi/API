@@ -1,36 +1,52 @@
 ﻿using API.Contracts;
 using API.Model;
+using API.Repositories;
 using API.Utility;
+using API.ViewModels.AccountRoles;
+using API.ViewModels.Accounts;
 using API.ViewModels.Bookings;
 using API.ViewModels.Educations;
+using API.ViewModels.Others;
 using API.ViewModels.Universities;
 using Microsoft.AspNetCore.Mvc;
+using System.Net;
 
 namespace API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class BookingController : ControllerBase
+    public class BookingController : BaseController<Booking, BookingVM>
     {
         private readonly IBookingRepository _bookingRepository;
         private readonly IMapper<Booking, BookingVM> _bookingMapper;
-        public BookingController(IBookingRepository bookingRepository, IMapper<Booking, BookingVM> bookingMapper)
+        public BookingController(IBookingRepository bookingRepository, IMapper<Booking, BookingVM> bookingMapper) : base(bookingRepository, bookingMapper)
         {
             _bookingRepository = bookingRepository;
             _bookingMapper = bookingMapper;
         }
 
-        [HttpGet]
+        /*[HttpGet]
         public IActionResult GetAll()
         {
             var bookings = _bookingRepository.GetAll();
             if (!bookings.Any())
             {
-                return NotFound();
+                return NotFound(new ResponseVM<List<BookingVM>>
+                {
+                    Code = StatusCodes.Status404NotFound,
+                    Status = HttpStatusCode.OK.ToString(),
+                    Message = "Data not found"
+                });
             }
             var data = bookings.Select(_bookingMapper.Map).ToList();
 
-            return Ok(data);
+            return Ok(new ResponseVM<List<BookingVM>>
+            {
+                Code = StatusCodes.Status200OK,
+                Status = HttpStatusCode.OK.ToString(),
+                Message = "Get data succeed",
+                Data = data
+            });
         }
 
         [HttpGet("{guid}")]
@@ -39,11 +55,22 @@ namespace API.Controllers
             var booking = _bookingRepository.GetByGuid(guid);
             if (booking is null)
             {
-                return NotFound();
+                return NotFound(new ResponseVM<BookingVM>
+                {
+                    Code = StatusCodes.Status404NotFound,
+                    Status = HttpStatusCode.OK.ToString(),
+                    Message = "Data not found"
+                });
             }
 
             var data = _bookingMapper.Map(booking);
-            return Ok(data);
+            return Ok(new ResponseVM<BookingVM>
+            {
+                Code = StatusCodes.Status200OK,
+                Status = HttpStatusCode.OK.ToString(),
+                Message = "Get data succeed",
+                Data = data
+            });
         }
 
         [HttpPost]
@@ -54,10 +81,22 @@ namespace API.Controllers
             var result = _bookingRepository.Create(bookingConverted);
             if (result is null)
             {
-                return BadRequest();
+                return BadRequest(new ResponseVM<BookingVM>
+                {
+                    Code = StatusCodes.Status400BadRequest,
+                    Status = HttpStatusCode.BadRequest.ToString(),
+                    Message = "Create failed"
+                });
             }
 
-            return Ok(result);
+            var resultConverted = _bookingMapper.Map(result);
+            return Ok(new ResponseVM<BookingVM>
+            {
+                Code = StatusCodes.Status200OK,
+                Status = HttpStatusCode.OK.ToString(),
+                Message = "Create success",
+                Data = resultConverted
+            });
         }
 
         [HttpPut]
@@ -67,10 +106,22 @@ namespace API.Controllers
             var isUpdated = _bookingRepository.Update(bookingConverted);
             if (!isUpdated)
             {
-                return BadRequest();
+                return BadRequest(new ResponseVM<BookingVM>
+                {
+                    Code = StatusCodes.Status400BadRequest,
+                    Status = HttpStatusCode.BadRequest.ToString(),
+                    Message = "Update failed"
+                });
             }
 
-            return Ok();
+            var data = _bookingMapper.Map(bookingConverted);
+            return Ok(new ResponseVM<BookingVM>
+            {
+                Code = StatusCodes.Status200OK,
+                Status = HttpStatusCode.OK.ToString(),
+                Message = "Update success",
+                Data = data
+            });
         }
 
         [HttpDelete("{guid}")]
@@ -79,10 +130,110 @@ namespace API.Controllers
             var isDeleted = _bookingRepository.Delete(guid);
             if (!isDeleted)
             {
-                return BadRequest();
+                return BadRequest(new ResponseVM<BookingVM>
+                {
+                    Code = StatusCodes.Status400BadRequest,
+                    Status = HttpStatusCode.BadRequest.ToString(),
+                    Message = "Delete failed"
+                });
             }
 
-            return Ok();
+            return Ok(new ResponseVM<BookingVM>
+            {
+                Code = StatusCodes.Status200OK,
+                Status = HttpStatusCode.OK.ToString(),
+                Message = "Delete success"
+            });
+        }*/
+
+        [HttpGet("BookingDuration")]
+        public IActionResult GetDuration()
+        {
+            var bookingLengths = _bookingRepository.GetBookingDuration();
+            if (!bookingLengths.Any())
+            {
+                return NotFound(new ResponseVM<IEnumerable<BookingDurationVM>>
+                {
+                    Code = StatusCodes.Status404NotFound,
+                    Status = HttpStatusCode.OK.ToString(),
+                    Message = "Data not found"
+                });
+            }
+
+            //return Ok(bookingLengths);
+            return Ok(new ResponseVM<IEnumerable<BookingDurationVM>>
+            {
+                Code = StatusCodes.Status200OK,
+                Status = HttpStatusCode.OK.ToString(),
+                Message = "Get data succeed",
+                Data = bookingLengths
+            });
         }
+
+        [HttpGet("BookingDetail")]
+        public IActionResult GetAllBookingDetail()
+        {
+            try
+            {
+
+                var results = _bookingRepository.GetAllBookingDetail();
+
+                return Ok(new ResponseVM<List<BookingDetailVM>>
+                {
+                    Code = StatusCodes.Status200OK,
+                    Status = HttpStatusCode.OK.ToString(),
+                    Message = "Get all booking detail succeed",
+                    Data = results.ToList()
+                });
+            }
+            catch
+            {
+                return NotFound(new ResponseVM<BookingDetailVM>
+                {
+                    Code = StatusCodes.Status404NotFound,
+                    Status = HttpStatusCode.NotFound.ToString(),
+                    Message = "Data not found"
+                });
+            }
+
+        }
+
+        [HttpGet("BookingDetail/{guid}")]
+        public IActionResult GetDetailByGuid(Guid guid)
+        {
+            try
+            {
+                var data = _bookingRepository.GetBookingDetailByGuid(guid);
+
+                if (data is null)
+                {
+                    return NotFound(new ResponseVM<BookingDetailVM>
+                    {
+                        Code = StatusCodes.Status404NotFound,
+                        Status = HttpStatusCode.NotFound.ToString(),
+                        Message = "Data not found"
+                    });
+                }
+
+                return Ok(new ResponseVM<BookingDetailVM>
+                {
+                    Code = StatusCodes.Status200OK,
+                    Status = HttpStatusCode.OK.ToString(),
+                    Message = "Get data succeed",
+                    Data = data
+                });
+            }
+            catch
+            {
+                return NotFound(new ResponseVM<BookingDetailVM>
+                {
+                    Code = StatusCodes.Status404NotFound,
+                    Status = HttpStatusCode.NotFound.ToString(),
+                    Message = "Data not found"
+                });
+            }
+        }
+
+
     }
 }

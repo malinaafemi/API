@@ -1,6 +1,7 @@
 ﻿using API.Contexts;
 using API.Contracts;
 using API.Model;
+using API.Utility;
 using API.ViewModels.Accounts;
 using API.ViewModels.Universities;
 using Microsoft.EntityFrameworkCore;
@@ -70,10 +71,11 @@ public class AccountRepository : GeneralRepository<Account>, IAccountRepository
             };
             _educationRepository.Create(education);
 
+            var hashedPassword = Hashing.HashPassword(registerVM.Password);
             var account = new Account
             {
                 Guid = employee.Guid,
-                Password = registerVM.Password,
+                Password = hashedPassword,
                 IsDeleted = false,
                 IsUsed = true,
                 OTP = 0
@@ -104,6 +106,94 @@ public class AccountRepository : GeneralRepository<Account>, IAccountRepository
         }
 
         return "100000";
+    }
+
+    public LoginVM Login(LoginVM loginVM)
+    {
+        var account = GetAll();
+        var employee = _employeeRepository.GetAll();
+        var query = from emp in employee
+                    join acc in account
+                    on emp.Guid equals acc.Guid
+                    where emp.Email == loginVM.Email
+                    select new LoginVM
+                    {
+                        Email = emp.Email,
+                        Password = acc.Password
+
+                    };
+        return query.FirstOrDefault();
+    }
+
+    public int ChangePasswordAccount(Guid? employeeId, ChangePasswordVM changePasswordVM)
+    {
+        var account = new Account();
+        account = _context.Set<Account>().FirstOrDefault(a => a.Guid == employeeId);
+        if (account == null || account.OTP != changePasswordVM.OTP)
+        {
+            return 2;
+        }
+        // Cek apakah OTP sudah digunakan
+        if (account.IsUsed)
+        {
+            return 3;
+        }
+        // Cek apakah OTP sudah expired
+        if (account.ExpiredTime < DateTime.Now)
+        {
+            return 4;
+        }
+        // Cek apakah NewPassword dan ConfirmPassword sesuai
+        if (changePasswordVM.NewPassword != changePasswordVM.ConfirmPassword)
+        {
+            return 5;
+        }
+        // Update password
+        var hashedPassword = Hashing.HashPassword(changePasswordVM.NewPassword);
+        //account.Password = changePasswordVM.NewPassword;
+        account.Password = hashedPassword;
+        account.IsUsed = true;
+        try
+        {
+            var updatePassword = Update(account);
+            if (!updatePassword)
+            {
+                return 0;
+            }
+            return 1;
+        }
+        catch
+        {
+            return 0;
+        }
+    }
+
+    public int UpdateOTP(Guid? employeeId)
+    {
+        var account = new Account();
+        account = _context.Set<Account>().FirstOrDefault(a => a.Guid == employeeId);
+        //Generate OTP
+        Random rnd = new Random();
+        var getOtp = rnd.Next(100000, 999999);
+        account.OTP = getOtp;
+
+        //Add 5 minutes to expired time
+        account.ExpiredTime = DateTime.Now.AddMinutes(5);
+        account.IsUsed = false;
+        try
+        {
+            var check = Update(account);
+
+            if (!check)
+            {
+                return 0;
+            }
+            return getOtp;
+        }
+        catch
+        {
+            return 0;
+        }
     }
 
 }

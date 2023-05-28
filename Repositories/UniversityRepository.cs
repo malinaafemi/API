@@ -28,8 +28,11 @@ public class UniversityRepository : GeneralRepository<University>, IUniversityRe
                 _context.SaveChanges();
 
             }
-
-            Create(university);
+            else
+            {
+                _context.Universities.Add(university);
+                _context.SaveChanges();
+            }
 
             return university;
 
