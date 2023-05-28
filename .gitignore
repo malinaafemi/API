@@ -118,7 +118,7 @@ ipch/
 *.vspx
 *.sap
 
-appsettings.json
+$ git rm --cached FILENAME appsettings.json
 
 # Visual Studio Trace Files
 *.e2e
