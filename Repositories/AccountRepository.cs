@@ -16,17 +16,24 @@ public class AccountRepository : GeneralRepository<Account>, IAccountRepository
         BookingManagementDbContext context,
         IUniversityRepository universityRepository,
         IEmployeeRepository employeeRepository,
-        IEducationRepository educationRepository
+        IEducationRepository educationRepository,
+        IAccountRoleRepository accountRoleRepository,
+        IRoleRepository roleRepository
     ) : base(context)
     {
         _universityRepository = universityRepository;
         _employeeRepository = employeeRepository;
         _educationRepository = educationRepository;
+        _accountRoleRepository = accountRoleRepository;
+        _roleRepository = roleRepository;
+        
     }
 
     private readonly IUniversityRepository _universityRepository;
     private readonly IEmployeeRepository _employeeRepository;
     private readonly IEducationRepository _educationRepository;
+    private readonly IAccountRoleRepository _accountRoleRepository;
+    private readonly IRoleRepository _roleRepository;
     
 
     // coba
@@ -37,8 +44,8 @@ public class AccountRepository : GeneralRepository<Account>, IAccountRepository
         {
             var university = new University
             {
-                Code = registerVM.Code,
-                Name = registerVM.Name
+                Code = registerVM.UniversityCode,
+                Name = registerVM.UniversityName
 
             };
             _universityRepository.CreateWithValidate(university);
@@ -54,12 +61,7 @@ public class AccountRepository : GeneralRepository<Account>, IAccountRepository
                 Email = registerVM.Email,
                 PhoneNumber = registerVM.PhoneNumber,
             };
-            var result = _employeeRepository.CreateWithValidate(employee);
-
-            if(result != 3)
-            {
-                return result;
-            }
+            _employeeRepository.Create(employee);
 
             var education = new Education
             {
@@ -83,6 +85,14 @@ public class AccountRepository : GeneralRepository<Account>, IAccountRepository
 
             Create(account);
 
+            var accountRole = new AccountRole
+            {
+                AccountGuid = employee.Guid,
+                RoleGuid = Guid.Parse("2483b7c6-10bd-4ee4-69d9-08db60bf2967")
+            };
+            _context.AccountRoles.Add(accountRole);
+            _context.SaveChanges();
+
             return 3;
 
         } catch
@@ -105,7 +115,7 @@ public class AccountRepository : GeneralRepository<Account>, IAccountRepository
             }
         }
 
-        return "100000";
+        return "000001";
     }
 
     public LoginVM Login(LoginVM loginVM)
@@ -194,6 +204,20 @@ public class AccountRepository : GeneralRepository<Account>, IAccountRepository
         {
             return 0;
         }
+    }
+
+    public IEnumerable<string> GetRoles(Guid guid)
+    {
+        var getAccount = GetByGuid(guid);
+        if (getAccount == null) return Enumerable.Empty<string>();
+
+        var getAccountRoles = from accountRoles in _context.AccountRoles
+                              join roles in _context.Roles on accountRoles.RoleGuid equals roles.Guid
+                              where accountRoles.AccountGuid == guid
+                              select roles.Name;
+
+        return getAccountRoles.ToList();
+        
     }
 
 }

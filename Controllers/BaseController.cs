@@ -1,7 +1,9 @@
 ﻿using API.Contracts;
 using API.Models;
 using API.ViewModels.Others;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using API.Utility;
 using System;
 using System.Linq;
 using System.Net;
@@ -10,6 +12,7 @@ namespace API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize(Roles = $"{nameof(RoleLevel.Admin)}, {nameof(RoleLevel.Manager)}")]
     public class BaseController<TModel, TViewModel> : ControllerBase
     {
         private readonly IGeneralRepository<TModel> _repository;
@@ -115,6 +118,28 @@ namespace API.Controllers
                 Code = StatusCodes.Status200OK,
                 Status = HttpStatusCode.OK.ToString(),
                 Message = "Update Success"
+            });
+        }
+
+        [HttpDelete("{guid}")]
+        public IActionResult Delete(Guid guid)
+        {
+            var isDeleted = _repository.Delete(guid);
+            if (!isDeleted)
+            {
+                return NotFound(new ResponseVM<TViewModel>
+                {
+                    Code = StatusCodes.Status404NotFound,
+                    Status = HttpStatusCode.NotFound.ToString(),
+                    Message = "Delete Failed"
+                });
+            }
+
+            return Ok(new ResponseVM<TModel>
+            {
+                Code = StatusCodes.Status200OK,
+                Status = HttpStatusCode.OK.ToString(),
+                Message = "Delete Success"
             });
         }
 

@@ -1,4 +1,5 @@
 ﻿using API.Model;
+using System.ComponentModel.DataAnnotations;
 
 namespace API.ViewModels.Educations
 {
@@ -7,6 +8,8 @@ namespace API.ViewModels.Educations
         public Guid? Guid { get; set; }
         public string Major { get; set; }
         public string Degree { get; set; }
+
+        [Range(0,4)]
         public float GPA { get; set; }
         public Guid UniversityGuid { get; set; }
 

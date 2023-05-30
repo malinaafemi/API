@@ -10,6 +10,8 @@ using API.ViewModels.Universities;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Identity.Client;
 using System.Net;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 
 namespace API.Controllers
 {
@@ -21,66 +23,18 @@ namespace API.Controllers
         private readonly IEmployeeRepository _employeeRepository;
         private readonly IMapper<Account, AccountVM> _accountMapper;
         private readonly IEmailService _emailService;
-        public AccountController(IAccountRepository accountRepository, IMapper<Account, AccountVM> accountMapper, IEmployeeRepository employeeRepository, IEmailService emailService) : base(accountRepository, accountMapper)
+        private readonly ITokenService _tokenService;
+        public AccountController(IAccountRepository accountRepository, IMapper<Account, AccountVM> accountMapper, IEmployeeRepository employeeRepository, IEmailService emailService, ITokenService tokenService) : base(accountRepository, accountMapper)
         {
             _accountRepository = accountRepository;
             _accountMapper = accountMapper;
             _employeeRepository = employeeRepository;
             _emailService = emailService;
+            _tokenService = tokenService;
         }
 
-        /*[HttpGet]
-        public IActionResult GetAll()
-        {
-            var accounts = _accountRepository.GetAll();
-            if (!accounts.Any())
-            {
-                return NotFound(new ResponseVM<List<AccountVM>>
-                {
-                    Code = StatusCodes.Status404NotFound,
-                    Status = HttpStatusCode.OK.ToString(),
-                    Message = "Data not found"
-                });
-            }
-
-            var data = accounts.Select(_accountMapper.Map).ToList();
-
-            return Ok(new ResponseVM<List<AccountVM>>
-            {
-                Code = StatusCodes.Status200OK,
-                Status = HttpStatusCode.OK.ToString(),
-                Message = "Get data succeed",
-                Data = data
-            });
-        }
-
-        [HttpGet("{guid}")]
-        public IActionResult GetByGuid(Guid guid)
-        {
-            var account = _accountRepository.GetByGuid(guid);
-            if (account is null)
-            {
-                return NotFound(new ResponseVM<AccountVM>
-                {
-                    Code = StatusCodes.Status404NotFound,
-                    Status = HttpStatusCode.OK.ToString(),
-                    Message = "Data not found"
-                });
-            }
-
-            var data = _accountMapper.Map(account);
-
-            return Ok(new ResponseVM<AccountVM>
-            {
-                Code = StatusCodes.Status200OK,
-                Status = HttpStatusCode.OK.ToString(),
-                Message = "Get data succeed",
-                Data = data
-            });
-        }*/
-
+        [AllowAnonymous]
         [HttpPost("Register")]
-
         public IActionResult Register(RegisterVM registerVM)
         {
             var result = _accountRepository.Register(registerVM);
@@ -129,11 +83,43 @@ namespace API.Controllers
 
         }
 
-        [HttpPost("Login")]
+        [HttpGet("ExtractClaims/{token}")]
+        public IActionResult ExtractClaims(string token)
+        {
+            var principal = _tokenService.ExtractClaimsFromJwt(token);
 
+            if (principal == null)
+            {
+                //return BadRequest("Invalid token");
+                return NotFound(new ResponseVM<ClaimVM>
+                {
+                    Code = StatusCodes.Status404NotFound,
+                    Status = HttpStatusCode.NotFound.ToString(),
+                    Message = "Invalid token"
+                });
+            }
+
+            /*var nameIdentifier = principal.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+            var name = principal.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name)?.Value;
+            var email = principal.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Email)?.Value;
+            var roles = principal.Claims.Where(c => c.Type == ClaimTypes.Role).Select(c => c.Value).ToList();*/
+
+            return Ok(new ResponseVM<ClaimVM>
+            {
+                Code = StatusCodes.Status200OK,
+                Status = HttpStatusCode.OK.ToString(),
+                Message = "Get claims success",
+                Data = principal
+            });
+        }
+
+
+        [AllowAnonymous]
+        [HttpPost("Login")]
         public IActionResult Login(LoginVM loginVM)
         {
             var account = _accountRepository.Login(loginVM);
+            var employee = _employeeRepository.GetByEmail(loginVM.Email);
 
             if (account == null)
             {
@@ -157,87 +143,33 @@ namespace API.Controllers
                 });
             }
 
-            return Ok(new ResponseVM<AccountVM>
+            var claims = new List<Claim>
+            {
+                new(ClaimTypes.NameIdentifier, employee.NIK),
+                new(ClaimTypes.Name, $"{employee.FirstName} {employee.LastName}"),
+                new(ClaimTypes.Email, employee.Email)
+            };
+
+            var roles = _accountRepository.GetRoles(employee.Guid);
+
+            foreach (var role in roles)
+            {
+                claims.Add(new Claim(ClaimTypes.Role, role));
+            }
+
+            var token = _tokenService.GenerateToken(claims);
+
+            return Ok(new ResponseVM<string>
             {
                 Code = StatusCodes.Status200OK,
                 Status = HttpStatusCode.OK.ToString(),
-                Message = "Login success"
+                Message = "Login success",
+                Data = token
             });
 
         }
 
-        /*[HttpPost]
-        public IActionResult Create(AccountVM accountVM)
-        {
-            var accountConverted = _accountMapper.Map(accountVM);
-            var result = _accountRepository.Create(accountConverted);
-            if (result is null)
-            {
-                return BadRequest(new ResponseVM<AccountVM>
-                {
-                    Code = StatusCodes.Status400BadRequest,
-                    Status = HttpStatusCode.BadRequest.ToString(),
-                    Message = "Create failed"
-                });
-            }
-
-            var resultConverted = _accountMapper.Map(result);
-            return Ok(new ResponseVM<AccountVM>
-            {
-                Code = StatusCodes.Status200OK,
-                Status = HttpStatusCode.OK.ToString(),
-                Message = "Create success",
-                Data = resultConverted
-            });
-        }*/
-
-        /*[HttpPut]
-        public IActionResult Update(AccountVM accountVM)
-        {
-            var accountConverted = _accountMapper.Map(accountVM);
-            var isUpdated = _accountRepository.Update(accountConverted);
-            if (!isUpdated)
-            {
-                return BadRequest(new ResponseVM<AccountVM>
-                {
-                    Code = StatusCodes.Status400BadRequest,
-                    Status = HttpStatusCode.BadRequest.ToString(),
-                    Message = "Update failed"
-                });
-            }
-
-            var data = _accountMapper.Map(accountConverted);
-            return Ok(new ResponseVM<AccountVM>
-            {
-                Code = StatusCodes.Status200OK,
-                Status = HttpStatusCode.OK.ToString(),
-                Message = "Update success",
-                Data = data
-            });
-        }
-
-        [HttpDelete("{guid}")]
-        public IActionResult Delete(Guid guid)
-        {
-            var isDeleted = _accountRepository.Delete(guid);
-            if (!isDeleted)
-            {
-                return BadRequest(new ResponseVM<AccountVM>
-                {
-                    Code = StatusCodes.Status400BadRequest,
-                    Status = HttpStatusCode.BadRequest.ToString(),
-                    Message = "Delete failed"
-                });
-            }
-
-            return Ok(new ResponseVM<AccountVM>
-            {
-                Code = StatusCodes.Status200OK,
-                Status = HttpStatusCode.OK.ToString(),
-                Message = "Delete success"
-            });
-        }*/
-
+        [AllowAnonymous]
         [HttpPost("ChangePassword")]
         public IActionResult ChangePassword(ChangePasswordVM changePasswordVM)
         {
@@ -300,7 +232,8 @@ namespace API.Controllers
             //return null
         }
 
-        [HttpPost("ForgotPassword" + "{email}")]
+        [AllowAnonymous]
+        [HttpPost("ForgotPassword/{email}")]
         public IActionResult UpdateResetPass(String email)
         {
 
@@ -345,7 +278,7 @@ namespace API.Controllers
                         Code = StatusCodes.Status200OK,
                         Status = HttpStatusCode.OK.ToString(),
                         Message = "OTP has been sent to your email",
-                        Data = hasil
+                        //Data = hasil
                     });
 
             }
